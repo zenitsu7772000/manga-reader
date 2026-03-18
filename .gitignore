@@ -1,0 +1,14 @@
+# Byte-compiled files
+*.elc
+
+# Documentation (not for release)
+CHANGELOG.org
+CUSTOM_SOURCES.md
+GITHUB_DESCRIPTION.md
+manga_collection.md
+PERFORMANCE.md
+SUGGESTIONS.org
+
+# Auto-save files
+*~
+\#*\#
