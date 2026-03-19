@@ -95,6 +95,8 @@ manga-reader/
 | `w` / `h` / `a` | Fit to width / height / both |
 | `c` | **Toggle horizontal centering** |
 | `W` | **Toggle webtoon mode (vertical scroll)** |
+| `C-<arrows>` | **Pan image when zoomed in (small steps)** |
+| `S-<arrows>` | **Pan image when zoomed in (large steps)** |
 | `m` | Set bookmark |
 | `i` | Toggle info bar |
 | `l` | Open library |

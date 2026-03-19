@@ -13,6 +13,18 @@
 (require 'cl-lib)
 (require 'seq)
 
+;;; ─── Customization ───────────────────────────────────────────────────────────
+
+(defcustom manga-pan-step 20
+  "Number of pixels to pan when using arrow keys in zoomed view."
+  :type 'integer
+  :group 'manga)
+
+(defcustom manga-pan-step-fast 50
+  "Number of pixels to pan when using Shift+arrow keys in zoomed view."
+  :type 'integer
+  :group 'manga)
+
 ;;; ─── Forward Declarations ────────────────────────────────────────────────────
 
 (declare-function manga-dashboard "manga.el")
@@ -63,6 +75,20 @@
     (define-key map (kbd "?")         #'manga-view-show-help)
     ;; Mouse clicks
     (define-key map (kbd "<mouse-1>") #'manga-view-next-page)
+    ;; Panning (when zoomed in)
+    (define-key map (kbd "C-n")       #'manga-view-pan-down)
+    (define-key map (kbd "C-p")       #'manga-view-pan-up)
+    (define-key map (kbd "C-f")       #'manga-view-pan-right)
+    (define-key map (kbd "C-b")       #'manga-view-pan-left)
+    (define-key map (kbd "C-<down>")  #'manga-view-pan-down)
+    (define-key map (kbd "C-<up>")    #'manga-view-pan-up)
+    (define-key map (kbd "C-<right>") #'manga-view-pan-right)
+    (define-key map (kbd "C-<left>")  #'manga-view-pan-left)
+    ;; Shift + arrows for larger pan steps
+    (define-key map (kbd "S-<right>") #'manga-view-pan-right-fast)
+    (define-key map (kbd "S-<left>")  #'manga-view-pan-left-fast)
+    (define-key map (kbd "S-<down>")  #'manga-view-pan-down-fast)
+    (define-key map (kbd "S-<up>")    #'manga-view-pan-up-fast)
     map)
   "Keymap for `manga-view-mode'.")
 
@@ -407,6 +433,86 @@
            (path    (nth (1- cur) pages)))
       (manga-view--display-page path cur total title chapter))))
 
+;;; ─── Panning (When Zoomed In) ────────────────────────────────────────────────
+
+(defun manga-view--pan (dx dy)
+  "Pan the current image by DX (horizontal) and DY (vertical) pixels.
+Positive DX pans right, positive DY pans down.
+Uses Emacs's built-in window scrolling for smooth navigation."
+  (when (and manga-view--current-image
+             (> manga-view--zoom 1.0))  ; Only pan when zoomed in
+    (let ((win (get-buffer-window (manga-view--buffer))))
+      (when win
+        (with-selected-window win
+          ;; Vertical scrolling
+          (when (/= dy 0)
+            (scroll-up dy))
+          ;; Horizontal panning via horizontal scrolling
+          (when (/= dx 0)
+            (let ((new-hscroll (+ (window-hscroll) dx)))
+              ;; Clamp horizontal scroll to valid range
+              (let* ((img-width (car (image-size manga-view--current-image t)))
+                     (win-width (window-pixel-width))
+                     (max-hscroll (max 0 (- img-width win-width))))
+                (setq new-hscroll (max 0 (min new-hscroll max-hscroll)))
+                (set-window-hscroll (selected-window) new-hscroll)))))))))
+
+(defun manga-view-pan-left ()
+  "Pan image left by `manga-pan-step' pixels."
+  (interactive)
+  (manga-view--pan (- manga-pan-step) 0)
+  (when (called-interactively-p 'any)
+    (message "manga: pan left")))
+
+(defun manga-view-pan-right ()
+  "Pan image right by `manga-pan-step' pixels."
+  (interactive)
+  (manga-view--pan manga-pan-step 0)
+  (when (called-interactively-p 'any)
+    (message "manga: pan right")))
+
+(defun manga-view-pan-up ()
+  "Pan image up by `manga-pan-step' pixels."
+  (interactive)
+  (manga-view--pan 0 (- manga-pan-step))
+  (when (called-interactively-p 'any)
+    (message "manga: pan up")))
+
+(defun manga-view-pan-down ()
+  "Pan image down by `manga-pan-step' pixels."
+  (interactive)
+  (manga-view--pan 0 manga-pan-step)
+  (when (called-interactively-p 'any)
+    (message "manga: pan down")))
+
+(defun manga-view-pan-left-fast ()
+  "Pan image left by `manga-pan-step-fast' pixels."
+  (interactive)
+  (manga-view--pan (- manga-pan-step-fast) 0)
+  (when (called-interactively-p 'any)
+    (message "manga: pan left (fast)")))
+
+(defun manga-view-pan-right-fast ()
+  "Pan image right by `manga-pan-step-fast' pixels."
+  (interactive)
+  (manga-view--pan manga-pan-step-fast 0)
+  (when (called-interactively-p 'any)
+    (message "manga: pan right (fast)")))
+
+(defun manga-view-pan-up-fast ()
+  "Pan image up by `manga-pan-step-fast' pixels."
+  (interactive)
+  (manga-view--pan 0 (- manga-pan-step-fast))
+  (when (called-interactively-p 'any)
+    (message "manga: pan up (fast)")))
+
+(defun manga-view-pan-down-fast ()
+  "Pan image down by `manga-pan-step-fast' pixels."
+  (interactive)
+  (manga-view--pan 0 manga-pan-step-fast)
+  (when (called-interactively-p 'any)
+    (message "manga: pan down (fast)")))
+
 ;;; ─── Chapter Navigation ─────────────────────────────────────────────────────
 
 (defun manga-view-next-chapter ()
@@ -474,6 +580,10 @@
         (insert "  +/-         : Zoom in/out\n")
         (insert "  =           : Reset zoom\n")
         (insert "  w/h/a       : Fit width/height/both\n\n")
+        (insert "Panning (when zoomed in):\n")
+        (insert "  C-<arrows>  : Pan image (small steps)\n")
+        (insert "  S-<arrows>  : Pan image (large steps)\n")
+        (insert "  C-n/p/f/b   : Pan down/up/right/left\n\n")
         (insert "Centering:\n")
         (insert "  c           : Toggle horizontal centering\n\n")
         (insert "Chapters:\n")
