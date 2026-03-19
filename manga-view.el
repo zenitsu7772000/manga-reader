@@ -48,6 +48,8 @@
     (define-key map (kbd "w")         #'manga-view-fit-width)
     (define-key map (kbd "h")         #'manga-view-fit-height)
     (define-key map (kbd "a")         #'manga-view-fit-both)
+    ;; Centering
+    (define-key map (kbd "c")         #'manga-view-toggle-center)
     ;; Webtoon mode
     (define-key map (kbd "W")         #'manga-view-toggle-webtoon)
     ;; Chapters
@@ -92,6 +94,9 @@
 
 (defvar manga-view--webtoon-mode nil
   "If non-nil, display all pages vertically for webtoon reading.")
+
+(defvar manga-view--center-image nil
+  "If non-nil, center images horizontally in the window.")
 
 (defvar manga-view--image-cache (make-hash-table :test 'equal :size 50)
   "Cache of loaded image objects, keyed by file path.")
@@ -180,8 +185,12 @@
                                           :height disp-h
                                           :ascent 100)))
               (setq manga-view--current-image scaled)
+              ;; Center image horizontally if enabled
+              (when manga-view--center-image
+                (let ((padding (max 0 (/ (- (window-pixel-width) disp-w) 2))))
+                  (insert (make-string (ceiling (/ (float padding) (frame-char-width (selected-frame)))) ? ))))
               (insert-image scaled (format "[Page %d]" page-num))
-              (insert "\n")))
+              (insert "\n"))
           ;; Info bar
           (when manga-view--show-info
             (insert "\n")
@@ -194,7 +203,7 @@
                                (or chapter-num "?")
                                page-num total-pages
                                (* 100 manga-view--zoom))
-                       'face 'manga-label)))))
+                       'face 'manga-label))))))
         (goto-char (point-min))
         (set-window-start (selected-window) (point-min))))))
 
@@ -379,6 +388,13 @@
   (manga-view--refresh)
   (message "manga: fit to window"))
 
+(defun manga-view-toggle-center ()
+  "Toggle horizontal image centering."
+  (interactive)
+  (setq manga-view--center-image (not manga-view--center-image))
+  (manga-view--refresh)
+  (message "manga: center %s" (if manga-view--center-image "ON" "OFF")))
+
 (defun manga-view--refresh ()
   "Refresh current page display with new zoom/fit settings."
   (when (and manga--current-session
@@ -458,6 +474,8 @@
         (insert "  +/-         : Zoom in/out\n")
         (insert "  =           : Reset zoom\n")
         (insert "  w/h/a       : Fit width/height/both\n\n")
+        (insert "Centering:\n")
+        (insert "  c           : Toggle horizontal centering\n\n")
         (insert "Chapters:\n")
         (insert "  ]/[         : Next/Previous chapter\n\n")
         (insert "Other:\n")

@@ -2,7 +2,7 @@
 
 > Read manga and comics without leaving Emacs. Local CBZ/CBR support with progress tracking.
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.0-blue)
 ![Emacs](https://img.shields.io/badge/Emacs-27.1+-7F5AB6?logo=gnuemacs)
 ![License](https://img.shields.io/badge/license-GPL--3.0-green)
 
@@ -13,7 +13,7 @@
 | Feature | Details |
 |---------|---------|
 | Local files | CBZ, CBR, ZIP, and image folders |
-| Image viewer | Fit-to-width, fit-to-height, zoom in/out |
+| Image viewer | Fit-to-width, fit-to-height, zoom in/out, **horizontal centering** |
 | Progress tracking | Remembers chapter + page across sessions |
 | Bookmarks | Bookmark any page in any manga |
 | Library | Browse history, local files, reading status |
@@ -93,6 +93,7 @@ manga-reader/
 | `+` / `-` | Zoom in / out |
 | `=` | Reset zoom |
 | `w` / `h` / `a` | Fit to width / height / both |
+| `c` | **Toggle horizontal centering** |
 | `W` | **Toggle webtoon mode (vertical scroll)** |
 | `m` | Set bookmark |
 | `i` | Toggle info bar |
